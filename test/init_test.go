@@ -115,14 +115,7 @@ func TestInitCommand(t *testing.T) {
 	}
 }
 
-// ディレクトリの存在を確認するヘルパー関数
-func dirExists(path string) bool {
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return info.IsDir()
-}
+// dirExists関数は test_utils.go に定義されているものを使用
 
 // 空のディレクトリに対するinitコマンドテスト
 func TestInitCommandOnEmptyDirectory(t *testing.T) {

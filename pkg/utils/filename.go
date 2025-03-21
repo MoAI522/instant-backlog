@@ -53,6 +53,12 @@ func ParseFilename(filename string) (int, string, string, error) {
 }
 
 // sanitizeString - 特殊文字を除去して安全な文字列にする
+// SanitizeFilename - 特殊文字を除去して安全なファイル名を生成する (外部公開版)
+func SanitizeFilename(s string) string {
+	return sanitizeString(s)
+}
+
+// sanitizeString - 特殊文字を除去して安全な文字列にする
 func sanitizeString(s string) string {
 	// ファイル名に使えない文字を置換
 	replacer := strings.NewReplacer(
