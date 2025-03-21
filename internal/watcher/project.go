@@ -15,6 +15,7 @@ import (
 type ProjectWatcher struct {
 	projectPath  string         // 監視対象のプロジェクトパス
 	issuesDir    string         // issuesディレクトリのパス
+	epicDir      string         // epicディレクトリのパス
 	watcher      *fsnotify.Watcher // fsnotifyのウォッチャー
 	debounceTime time.Duration  // デバウンス時間
 	stopChan     chan struct{}  // 停止シグナル用のチャネル
@@ -36,10 +37,17 @@ func NewProjectWatcher(projectPath string, debounceTime time.Duration) (*Project
 	if _, err := os.Stat(issuesDir); os.IsNotExist(err) {
 		return nil, fmt.Errorf("issuesディレクトリが存在しません: %s", issuesDir)
 	}
+	
+	// epicディレクトリの検証
+	epicDir := filepath.Join(projectPath, "epic")
+	if _, err := os.Stat(epicDir); os.IsNotExist(err) {
+		return nil, fmt.Errorf("epicディレクトリが存在しません: %s", epicDir)
+	}
 
 	return &ProjectWatcher{
 		projectPath:  projectPath,
 		issuesDir:    issuesDir,
+		epicDir:      epicDir,
 		debounceTime: debounceTime,
 		stopChan:     make(chan struct{}),
 		isRunning:    false,
@@ -65,7 +73,14 @@ func (pw *ProjectWatcher) Start() error {
 	err = watcher.Add(pw.issuesDir)
 	if err != nil {
 		watcher.Close()
-		return fmt.Errorf("ディレクトリの監視に失敗しました: %w", err)
+		return fmt.Errorf("issuesディレクトリの監視に失敗しました: %w", err)
+	}
+	
+	// epicディレクトリも監視
+	err = watcher.Add(pw.epicDir)
+	if err != nil {
+		watcher.Close()
+		return fmt.Errorf("epicディレクトリの監視に失敗しました: %w", err)
 	}
 
 	pw.watcher = watcher

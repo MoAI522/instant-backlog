@@ -370,3 +370,104 @@ func TestFilenameUpdateOnStatusChange(t *testing.T) {
 		t.Errorf("元のファイル名がまだ残っています: %s", originalFilePath)
 	}
 }
+
+// Epicに紐づいたIssueがすべてClosedになった場合に、EpicがCloseに更新されることをテスト
+func TestEpicAutoCloseWhenAllIssuesAreClosed(t *testing.T) {
+	// テスト環境をセットアップ
+	cfg, cleanup := setupTestEnvironment(t)
+	defer cleanup()
+
+	// テスト用のEpicを作成
+	createTestEpic(t, cfg, 1, "テストエピック", "Open")
+
+	// このEpicに紐づく複数のIssueを作成
+	createTestIssue(t, cfg, 1, "テストタスク1", "Open", 1, 3)
+	createTestIssue(t, cfg, 2, "テストタスク2", "Open", 1, 5)
+
+	// 初期状態では、EpicがOpenであることを確認
+	epic, err := parser.ParseEpicFile(filepath.Join(cfg.EpicDir, "1_O_テストエピック.md"))
+	if err != nil {
+		t.Fatalf("Epicファイルの読み込みに失敗しました: %v", err)
+	}
+	if epic.Status != "Open" {
+		t.Fatalf("初期状態でEpicのステータスがOpenではありませんでした")
+	}
+
+	// 1つ目のIssueをCloseに変更
+	issue1Path := filepath.Join(cfg.IssuesDir, "1_O_テストタスク1.md")
+	issue1, err := parser.ParseIssueFile(issue1Path)
+	if err != nil {
+		t.Fatalf("Issueファイルの読み込みに失敗しました: %v", err)
+	}
+	issue1.Status = "Close"
+	if err := fileops.WriteIssue(cfg.IssuesDir, issue1); err != nil {
+		t.Fatalf("Issueの更新に失敗しました: %v", err)
+	}
+
+	// Issueファイル名を更新
+	err = commands.RenameCommand(cfg)
+	if err != nil {
+		t.Fatalf("renameコマンドの実行に失敗しました: %v", err)
+	}
+
+	// Issue1がCloseされた段階でsyncを実行
+	err = commands.SyncCommand(cfg)
+	if err != nil {
+		t.Fatalf("syncコマンドの実行に失敗しました: %v", err)
+	}
+	
+	// EpicはまだCloseになっていないはず
+	epic, err = parser.ParseEpicFile(filepath.Join(cfg.EpicDir, "1_O_テストエピック.md"))
+	if err != nil {
+		t.Fatalf("Epicファイルの読み込みに失敗しました: %v", err)
+	}
+	if epic.Status != "Open" {
+		t.Errorf("Epicのステータスが不正です、期待値: %s, 実際: %s", "Open", epic.Status)
+	}
+
+	// 2つ目のIssueもCloseに変更
+	issue2Path := filepath.Join(cfg.IssuesDir, "2_O_テストタスク2.md")
+	issue2, err := parser.ParseIssueFile(issue2Path)
+	if err != nil {
+		t.Fatalf("Issueファイルの読み込みに失敗しました: %v", err)
+	}
+	issue2.Status = "Close"
+	if err := fileops.WriteIssue(cfg.IssuesDir, issue2); err != nil {
+		t.Fatalf("Issueの更新に失敗しました: %v", err)
+	}
+
+	// Issue2のファイル名を更新
+	err = commands.RenameCommand(cfg)
+	if err != nil {
+		t.Fatalf("renameコマンドの実行に失敗しました: %v", err)
+	}
+
+	// すべてのIssueがCloseになったので、syncを実行
+	err = commands.SyncCommand(cfg)
+	if err != nil {
+		t.Fatalf("syncコマンドの実行に失敗しました: %v", err)
+	}
+
+	// この時点でEpicがCloseに更新されているか確認
+	// 注意: ファイル名も変更されているはず
+	newEpicPath := filepath.Join(cfg.EpicDir, "1_C_テストエピック.md")
+	if !fileExists(newEpicPath) {
+		// ディレクトリ内のファイルを確認
+		files, _ := os.ReadDir(cfg.EpicDir)
+		t.Logf("Epicディレクトリ内のファイル:")
+		for _, file := range files {
+			t.Logf("- %s", file.Name())
+		}
+		t.Errorf("Epicファイル名が正しく更新されていません: %s", newEpicPath)
+	}
+
+	// 新しいファイル名でEpicを読み込み、ステータスがCloseになっているか確認
+	updatedEpic, err := parser.ParseEpicFile(newEpicPath)
+	if err != nil {
+		t.Fatalf("更新後Epicファイルの読み込みに失敗しました: %v", err)
+	}
+
+	if updatedEpic.Status != "Close" {
+		t.Errorf("Epicのステータスが正しく更新されていません、期待値: %s, 実際: %s", "Close", updatedEpic.Status)
+	}
+}
