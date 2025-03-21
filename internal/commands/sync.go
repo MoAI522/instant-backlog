@@ -14,20 +14,20 @@ import (
 
 // UpdateEpicStatusBasedOnIssues - Epicのステータスを関連するIssueの状態に基づいて更新する
 func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
-	fmt.Println("UpdateEpicStatusBasedOnIssues: Epicステータスの更新を開始します...")
+	fmt.Println("Epicステータスの更新を開始します...")
 	// すべてのIssueを読み込む
 	issues, err := fileops.ReadAllIssues(cfg.IssuesDir)
 	if err != nil {
 		return fmt.Errorf("Issueの読み込みに失敗しました: %w", err)
 	}
 
-	// IDごとにIssueをグループ化（デバッグ用）
+	// IDごとにIssueをグループ化
 	issuesByID := make(map[int][]*models.Issue)
 	for _, issue := range issues {
 		issuesByID[issue.ID] = append(issuesByID[issue.ID], issue)
 	}
 	
-	// 重複チェック（デバッグ用）
+	// 重複チェック
 	for id, issueGroup := range issuesByID {
 		if len(issueGroup) > 1 {
 			fmt.Printf("警告: Issue ID=%d に複数のファイルが見つかりました（%d件）\n", id, len(issueGroup))
@@ -45,7 +45,6 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 
 	// ステータスが変更されたかどうかを追跡
 	statusChanged := false
-	fmt.Printf("UpdateEpicStatusBasedOnIssues: 読み込んだEpic数: %d\n", len(epics))
 	
 	// Epic IDごとにIssueをグループ化
 	issuesByEpic := make(map[int][]*models.Issue)
@@ -55,10 +54,8 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 
 	// 各Epicについて、関連するIssueのステータスをチェック
 	for _, epic := range epics {
-		fmt.Printf("UpdateEpicStatusBasedOnIssues: Epic ID=%d, Title=%s, Status=%s を処理\n", epic.ID, epic.Title, epic.Status)
 		if epic.Status == "Close" {
 			// すでにClosedなら何もしない
-			fmt.Printf("UpdateEpicStatusBasedOnIssues: Epic ID=%d は既にCloseのためスキップ\n", epic.ID)
 			continue
 		}
 
@@ -67,43 +64,34 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 
 		// 紐づくIssueがない場合はスキップ
 		if len(epicIssues) == 0 {
-			fmt.Printf("UpdateEpicStatusBasedOnIssues: Epic ID=%d に紐づくIssueがないためスキップ\n", epic.ID)
 			continue
 		}
-		fmt.Printf("UpdateEpicStatusBasedOnIssues: Epic ID=%d に紐づくIssue数: %d\n", epic.ID, len(epicIssues))
 
 		// すべてのIssueがCloseか確認
 		allClosed := true
 		for _, issue := range epicIssues {
-			fmt.Printf("UpdateEpicStatusBasedOnIssues: Epic ID=%d に紐づくIssue: ID=%d, Title=%s, Status=%s\n",
-				epic.ID, issue.ID, issue.Title, issue.Status)
 			if issue.Status != "Close" {
 				allClosed = false
-				fmt.Printf("UpdateEpicStatusBasedOnIssues: Issue ID=%d がOpen状態のため、Epic ID=%d はCloseできません\n",
-					issue.ID, epic.ID)
 				break
 			}
 		}
 
 		// すべてのIssueがClosedの場合、Epicも閉じる
 		if allClosed {
-			fmt.Printf("UpdateEpicStatusBasedOnIssues: すべてのIssueがClose状態のため、Epic ID=%d もCloseに更新します\n", epic.ID)
 			old := epic.Status
 			epic.Status = "Close"
 
 			// 変更があった場合のみファイルを更新
 			if old != epic.Status {
 				statusChanged = true
-				fmt.Printf("Epicを更新します: ID=%d, タイトル=%s (ステータスを %s から %s に変更)\n",
+				fmt.Printf("Epic更新: ID=%d, タイトル=%s (ステータス: %s → %s)\n",
 					epic.ID, epic.Title, old, epic.Status)
 
 				// 旧ファイル名を生成
 				oldFilename := utils.GenerateFilename(epic.ID, old, epic.Title)
 				oldFilePath := filepath.Join(cfg.EpicDir, oldFilename)
-				fmt.Printf("UpdateEpicStatusBasedOnIssues: 旧ファイル名: %s\n", oldFilePath)
 
 				// 更新されたEpicを書き込む
-				fmt.Printf("UpdateEpicStatusBasedOnIssues: Epic ID=%d のファイルを新しいステータス %s で書き込みます\n", epic.ID, epic.Status)
 				if err := fileops.WriteEpic(cfg.EpicDir, epic); err != nil {
 					return fmt.Errorf("Epicの更新に失敗しました: %w", err)
 				}
@@ -118,9 +106,8 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 	}
 
 	// ステータスが変更された場合のみファイル名を更新する
-	fmt.Printf("UpdateEpicStatusBasedOnIssues: statusChanged=%v\n", statusChanged)
 	if statusChanged {
-		fmt.Println("UpdateEpicStatusBasedOnIssues: RenameCommandを実行します")
+		fmt.Println("Epicステータス変更によりファイル名を更新します...")
 		err = RenameCommand(cfg)
 		if err != nil {
 			return fmt.Errorf("ファイル名の更新に失敗しました: %w", err)
@@ -132,7 +119,7 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 
 // SyncCommand - order.csvとIssueファイルの同期を行う
 func SyncCommand(cfg *config.Config) error {
-	fmt.Println("order.csvの同期を開始します...")
+	fmt.Println("===== order.csvの同期を開始します... ====")
 
 	// 1. すべてのIssueを読み込む
 	issues, err := fileops.ReadAllIssues(cfg.IssuesDir)
@@ -194,6 +181,8 @@ func SyncCommand(cfg *config.Config) error {
 	if err := RenameCommand(cfg); err != nil {
 		return fmt.Errorf("ファイル名の更新に失敗しました: %w", err)
 	}
+
+	fmt.Println("===== order.csvの同期が完了しました ====")
 
 	return nil
 }

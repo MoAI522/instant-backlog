@@ -91,7 +91,7 @@ func (pw *ProjectWatcher) Start() error {
 	// イベント処理ゴルーチンを起動
 	go pw.processEvents()
 
-	fmt.Printf("プロジェクト '%s' の監視を開始しました\n", pw.projectPath)
+	fmt.Printf("===== プロジェクト '%s' の監視を開始しました =====\n", pw.projectPath)
 	return nil
 }
 
@@ -118,7 +118,7 @@ func (pw *ProjectWatcher) Stop() error {
 	}
 
 	pw.isRunning = false
-	fmt.Printf("プロジェクト '%s' の監視を停止しました\n", pw.projectPath)
+	fmt.Printf("===== プロジェクト '%s' の監視を停止しました =====\n", pw.projectPath)
 	return nil
 }
 
@@ -206,7 +206,7 @@ func SetCommandExecutor(executor CommandExecutor) {
 
 // executeCommands - 関連コマンドを実行
 func (pw *ProjectWatcher) executeCommands() {
-	fmt.Printf("ファイル変更を検知しました: %s\n", pw.projectPath)
+	fmt.Printf("===== ファイル変更を検知しました: %s =====\n", pw.projectPath)
 	
 	// 設定オブジェクトの作成
 	cfg := &config.Config{
@@ -217,16 +217,16 @@ func (pw *ProjectWatcher) executeCommands() {
 	}
 	
 	// syncコマンドを実行
-	fmt.Println("syncコマンドを実行中...")
+	fmt.Println("syncコマンド実行中...")
 	if err := commandExecutor.ExecuteSync(cfg); err != nil {
-		fmt.Printf("syncコマンドの実行中にエラーが発生しました: %v\n", err)
+		fmt.Printf("エラー: syncコマンドの実行に失敗しました: %v\n", err)
 	}
 	
 	// renameコマンドを実行
-	fmt.Println("renameコマンドを実行中...")
+	fmt.Println("renameコマンド実行中...")
 	if err := commandExecutor.ExecuteRename(cfg); err != nil {
-		fmt.Printf("renameコマンドの実行中にエラーが発生しました: %v\n", err)
+		fmt.Printf("エラー: renameコマンドの実行に失敗しました: %v\n", err)
 	}
 	
-	fmt.Println("ファイル変更の処理が完了しました")
+	fmt.Println("===== ファイル変更の処理が完了しました =====")
 }

@@ -39,7 +39,7 @@ func UnwatchCommand(cfg *config.Config, projectPath string) error {
 		return fmt.Errorf("監視の停止に失敗しました: %w", err)
 	}
 
-	fmt.Printf("プロジェクト '%s' の監視を停止しました\n", projectPath)
+	fmt.Printf("===== プロジェクト '%s' の監視を停止しました =====\n", projectPath)
 	return nil
 }
 
@@ -51,13 +51,13 @@ func UnwatchAllCommand(_ *config.Config) error {
 	// 現在監視中のプロジェクトを取得
 	projects := manager.GetWatchingProjects()
 	if len(projects) == 0 {
-		fmt.Println("現在監視中のプロジェクトはありません")
+		fmt.Println("===== 現在監視中のプロジェクトはありません =====")
 		return nil
 	}
 
 	// すべての監視を停止
 	manager.StopAll()
 
-	fmt.Printf("すべてのプロジェクト（%d個）の監視を停止しました\n", len(projects))
+	fmt.Printf("===== すべてのプロジェクト（%d個）の監視を停止しました =====\n", len(projects))
 	return nil
 }

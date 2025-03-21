@@ -56,7 +56,7 @@ func WatchCommand(cfg *config.Config, projectPath string) error {
 		return fmt.Errorf("監視の開始に失敗しました: %w", err)
 	}
 
-	fmt.Printf("プロジェクト '%s' の監視を開始しました\n", projectPath)
+	fmt.Printf("\nプロジェクト '%s' の監視を開始しました\n", projectPath)
 	fmt.Println("監視を停止するには Ctrl+C を押すか、別のターミナルで 'ib unwatch' を実行してください")
 
 	// シグナルハンドリング（Ctrl+Cでの終了）
@@ -67,7 +67,7 @@ func WatchCommand(cfg *config.Config, projectPath string) error {
 	<-sigChan
 
 	// 監視の停止
-	fmt.Println("\n監視を停止しています...")
+	fmt.Println("\n===== 監視を停止しています... =====")
 	if err := manager.StopWatching(projectPath); err != nil {
 		return fmt.Errorf("監視の停止に失敗しました: %w", err)
 	}
