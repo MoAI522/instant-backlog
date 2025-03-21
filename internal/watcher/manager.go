@@ -106,7 +106,7 @@ func (m *WatchManager) StopAll() {
 			fmt.Printf("警告: プロジェクト '%s' の監視停止に失敗しました: %v\n", path, err)
 		}
 	}
-	
+
 	// マップをクリア
 	m.watchers = make(map[string]*ProjectWatcher)
 }

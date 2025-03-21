@@ -11,6 +11,8 @@ type Config struct {
 	EpicDir     string
 	IssuesDir   string
 	OrderCSV    string
+	// テンプレートディレクトリのパス
+	TemplatePath string
 }
 
 // NewConfig - デフォルト設定で設定構造体を作成
@@ -22,7 +24,7 @@ func NewConfig() *Config {
 	}
 
 	projectsDir := filepath.Join(baseDir, "projects")
-	
+
 	return &Config{
 		ProjectsDir: projectsDir,
 		EpicDir:     filepath.Join(projectsDir, "epic"),

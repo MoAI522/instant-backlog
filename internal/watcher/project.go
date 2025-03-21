@@ -13,16 +13,16 @@ import (
 
 // ProjectWatcher - 単一プロジェクトの監視を担当する構造体
 type ProjectWatcher struct {
-	projectPath  string         // 監視対象のプロジェクトパス
-	issuesDir    string         // issuesディレクトリのパス
-	epicDir      string         // epicディレクトリのパス
-	watcher      *fsnotify.Watcher // fsnotifyのウォッチャー
-	debounceTime time.Duration  // デバウンス時間
-	stopChan     chan struct{}  // 停止シグナル用のチャネル
-	mutex        sync.Mutex     // 並行アクセス用のミューテックス
-	isRunning    bool           // 実行中かどうかのフラグ
-	lastEventTime time.Time     // 最後のイベント時刻（デバウンス用）
-	timer        *time.Timer    // デバウンスタイマー
+	projectPath   string            // 監視対象のプロジェクトパス
+	issuesDir     string            // issuesディレクトリのパス
+	epicDir       string            // epicディレクトリのパス
+	watcher       *fsnotify.Watcher // fsnotifyのウォッチャー
+	debounceTime  time.Duration     // デバウンス時間
+	stopChan      chan struct{}     // 停止シグナル用のチャネル
+	mutex         sync.Mutex        // 並行アクセス用のミューテックス
+	isRunning     bool              // 実行中かどうかのフラグ
+	lastEventTime time.Time         // 最後のイベント時刻（デバウンス用）
+	timer         *time.Timer       // デバウンスタイマー
 }
 
 // NewProjectWatcher - 新しいProjectWatcherインスタンスを作成
@@ -37,7 +37,7 @@ func NewProjectWatcher(projectPath string, debounceTime time.Duration) (*Project
 	if _, err := os.Stat(issuesDir); os.IsNotExist(err) {
 		return nil, fmt.Errorf("issuesディレクトリが存在しません: %s", issuesDir)
 	}
-	
+
 	// epicディレクトリの検証
 	epicDir := filepath.Join(projectPath, "epic")
 	if _, err := os.Stat(epicDir); os.IsNotExist(err) {
@@ -75,7 +75,7 @@ func (pw *ProjectWatcher) Start() error {
 		watcher.Close()
 		return fmt.Errorf("issuesディレクトリの監視に失敗しました: %w", err)
 	}
-	
+
 	// epicディレクトリも監視
 	err = watcher.Add(pw.epicDir)
 	if err != nil {
@@ -106,7 +106,7 @@ func (pw *ProjectWatcher) Stop() error {
 
 	// 停止シグナルを送信
 	close(pw.stopChan)
-	
+
 	// fsnotifyウォッチャーを閉じる
 	if pw.watcher != nil {
 		pw.watcher.Close()
@@ -129,13 +129,13 @@ func (pw *ProjectWatcher) processEvents() {
 		case <-pw.stopChan:
 			// 停止シグナルを受信
 			return
-			
+
 		case event, ok := <-pw.watcher.Events:
 			if !ok {
 				// チャネルがクローズされた
 				return
 			}
-			
+
 			// 拡張子が.mdでない場合は無視
 			if filepath.Ext(event.Name) != ".md" {
 				continue
@@ -147,12 +147,12 @@ func (pw *ProjectWatcher) processEvents() {
 				pw.mutex.Lock()
 				now := time.Now()
 				pw.lastEventTime = now
-				
+
 				// 既存のタイマーを停止して再設定
 				if pw.timer != nil {
 					pw.timer.Stop()
 				}
-				
+
 				pw.timer = time.AfterFunc(pw.debounceTime, func() {
 					pw.mutex.Lock()
 					// デバウンス時間内に新しいイベントがなかった場合のみ実行
@@ -161,10 +161,10 @@ func (pw *ProjectWatcher) processEvents() {
 					}
 					pw.mutex.Unlock()
 				})
-				
+
 				pw.mutex.Unlock()
 			}
-			
+
 		case err, ok := <-pw.watcher.Errors:
 			if !ok {
 				// チャネルがクローズされた
@@ -207,7 +207,7 @@ func SetCommandExecutor(executor CommandExecutor) {
 // executeCommands - 関連コマンドを実行
 func (pw *ProjectWatcher) executeCommands() {
 	fmt.Printf("===== ファイル変更を検知しました: %s =====\n", pw.projectPath)
-	
+
 	// 設定オブジェクトの作成
 	cfg := &config.Config{
 		ProjectsDir: pw.projectPath,
@@ -215,18 +215,18 @@ func (pw *ProjectWatcher) executeCommands() {
 		IssuesDir:   pw.issuesDir,
 		OrderCSV:    filepath.Join(pw.projectPath, "order.csv"),
 	}
-	
+
 	// syncコマンドを実行
 	fmt.Println("syncコマンド実行中...")
 	if err := commandExecutor.ExecuteSync(cfg); err != nil {
 		fmt.Printf("エラー: syncコマンドの実行に失敗しました: %v\n", err)
 	}
-	
+
 	// renameコマンドを実行
 	fmt.Println("renameコマンド実行中...")
 	if err := commandExecutor.ExecuteRename(cfg); err != nil {
 		fmt.Printf("エラー: renameコマンドの実行に失敗しました: %v\n", err)
 	}
-	
+
 	fmt.Println("===== ファイル変更の処理が完了しました =====")
 }

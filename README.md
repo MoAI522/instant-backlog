@@ -11,6 +11,7 @@
 - ステータス変更時のファイル名自動更新
 - ファイル変更の自動監視と同期
 - 関連する Issue がすべて Close になると Epic も自動的に Close に更新
+- プロジェクトの初期化機能（テンプレートと使用方法ドキュメント付き）
 
 ## 使用方法
 
@@ -34,9 +35,16 @@
 ./instant-backlog unwatch [project_path]
 # または省略形を使用
 ./ib unwatch [project_path]
+
+# 新しいプロジェクトを初期化
+./instant-backlog init [project_path]
+# または省略形を使用
+./ib init [project_path]
 ```
 
 ## ファイル構造
+
+初期化コマンドでは以下の構造が自動的に作成されます：
 
 ```
 projects/

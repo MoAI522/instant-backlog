@@ -26,7 +26,7 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 	for _, issue := range issues {
 		issuesByID[issue.ID] = append(issuesByID[issue.ID], issue)
 	}
-	
+
 	// 重複チェック
 	for id, issueGroup := range issuesByID {
 		if len(issueGroup) > 1 {
@@ -45,7 +45,7 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 
 	// ステータスが変更されたかどうかを追跡
 	statusChanged := false
-	
+
 	// Epic IDごとにIssueをグループ化
 	issuesByEpic := make(map[int][]*models.Issue)
 	for _, issue := range issues {
@@ -95,7 +95,7 @@ func UpdateEpicStatusBasedOnIssues(cfg *config.Config) error {
 				if err := fileops.WriteEpic(cfg.EpicDir, epic); err != nil {
 					return fmt.Errorf("Epicの更新に失敗しました: %w", err)
 				}
-				
+
 				// 古いファイルを明示的に削除（同じIDの重複ファイルを避けるため）
 				if err := os.Remove(oldFilePath); err != nil {
 					fmt.Printf("警告: 古いEpicファイルの削除に失敗しました: %v\n", err)

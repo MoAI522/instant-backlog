@@ -26,7 +26,7 @@ func GenerateFilename(id int, status, title string) string {
 func ParseFilename(filename string) (int, string, string, error) {
 	// 拡張子を除去
 	base := strings.TrimSuffix(filename, ".md")
-	
+
 	// 区切り文字で分割
 	parts := strings.SplitN(base, "_", 3)
 	if len(parts) < 3 {

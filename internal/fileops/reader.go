@@ -39,12 +39,12 @@ func ReadAllIssues(directory string) ([]*models.Issue, error) {
 			fmt.Printf("Issue ID=%d を登録しました (Status=%s)\n", issue.ID, issue.Status)
 		} else {
 			// すでに同一IDが存在する場合は警告を出す
-			fmt.Printf("警告: Issue ID=%d が重複しています。現在: Status=%s, 新規: Status=%s\n", 
+			fmt.Printf("警告: Issue ID=%d が重複しています。現在: Status=%s, 新規: Status=%s\n",
 				issue.ID, existingIssue.Status, issue.Status)
 			// ファイル名からCloseが優先されるようにすると、より安全
 			if issue.Status == "Close" {
 				issueMap[issue.ID] = issue
-				fmt.Printf("更新: Issue ID=%d の最新ステータスとして %s を採用しました\n", 
+				fmt.Printf("更新: Issue ID=%d の最新ステータスとして %s を採用しました\n",
 					issue.ID, issue.Status)
 			}
 		}

@@ -321,7 +321,7 @@ func TestFilenameUpdateOnStatusChange(t *testing.T) {
 
 	// 内容を変更してCloseステータスに更新
 	newContent := strings.Replace(string(content), "status: Open", "status: Close", 1)
-	
+
 	// 変更した内容で元のファイルを上書き
 	err = os.WriteFile(originalFilePath, []byte(newContent), 0644)
 	if err != nil {
@@ -343,7 +343,7 @@ func TestFilenameUpdateOnStatusChange(t *testing.T) {
 	if err != nil {
 		t.Fatalf("renameコマンドの実行に失敗しました: %v", err)
 	}
-	
+
 	// 2回目のrenameコマンド実行を確認するために再度実行
 	err = commands.RenameCommand(cfg)
 	if err != nil {
@@ -415,7 +415,7 @@ func TestEpicAutoCloseWhenAllIssuesAreClosed(t *testing.T) {
 	if err != nil {
 		t.Fatalf("syncコマンドの実行に失敗しました: %v", err)
 	}
-	
+
 	// EpicはまだCloseになっていないはず
 	epic, err = parser.ParseEpicFile(filepath.Join(cfg.EpicDir, "1_O_テストエピック.md"))
 	if err != nil {

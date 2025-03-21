@@ -57,17 +57,17 @@ func main() {
 			if len(args) > 0 {
 				projectPath = args[0]
 			}
-			
+
 			// シグナルハンドリングのセットアップ
 			sigChan := make(chan os.Signal, 1)
 			signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-			
+
 			// ゴルーチンで監視を開始
 			errChan := make(chan error, 1)
 			go func() {
 				errChan <- commands.WatchCommand(cfg, projectPath)
 			}()
-			
+
 			// シグナルまたはエラーを待機
 			select {
 			case <-sigChan:
@@ -98,11 +98,27 @@ func main() {
 		},
 	}
 
+	// initコマンド
+	var initCmd = &cobra.Command{
+		Use:   "init [project_path]",
+		Short: "プロジェクトを初期化",
+		Long:  `指定したディレクトリをスプリントバックログとして初期化します。引数がない場合は現在のディレクトリを使用します`,
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			projectPath := ""
+			if len(args) > 0 {
+				projectPath = args[0]
+			}
+			return commands.InitCommand(cfg, projectPath)
+		},
+	}
+
 	// コマンドをルートコマンドに追加
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(renameCmd)
 	rootCmd.AddCommand(watchCmd)
 	rootCmd.AddCommand(unwatchCmd)
+	rootCmd.AddCommand(initCmd)
 
 	// 実行
 	if err := rootCmd.Execute(); err != nil {
