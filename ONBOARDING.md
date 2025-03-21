@@ -10,6 +10,7 @@ instant-backlog は、マークダウンファイルを使用してスクラム�
 - order.csv との自動同期による優先順位付け
 - ステータス変更時のファイル名自動更新
 - ファイル変更の自動監視と同期
+- Issue の状態に基づく Epic の自動クローズ（Epic に紐づくすべての Issue が Close されると Epic も自動的に Close される）
 
 ## 2. プロジェクト構造
 
@@ -31,7 +32,11 @@ instant-backlog/
 │   ├── epic/               # Epicファイル格納ディレクトリ
 │   ├── issues/             # Issueファイル格納ディレクトリ
 │   └── order.csv           # 実施順管理ファイル
-└── test/                   # テストケース
+├── test/                   # テストケース
+├── _prompts/               # 開発用プロンプトとドキュメント
+│   ├── archives/           # 過去のプロンプト
+│   └── reusables/          # 再利用可能なプロンプト
+└── dist/                   # ビルド成果物
 ```
 
 ## 3. 主要コンポーネント解説
@@ -98,7 +103,7 @@ id,title,epic,estimate
 
 ### 前提条件
 
-- Go 1.24 以上
+- Go 1.24.1 以上
 - 任意のテキストエディタまたは IDE
 
 ### ローカル環境セットアップ
@@ -158,6 +163,11 @@ go build -o instant-backlog ./cmd/instant-backlog
 ./ib rename
 ```
 
+ファイル名は以下の規則に従って自動的に生成されます： `{ID}_{STATUS_PREFIX}_{TITLE}.md`
+- `ID` - タスクまたはEpicの一意のID
+- `STATUS_PREFIX` - ステータスの頭文字（`O` = Open、`C` = Close）
+- `TITLE` - タイトル（スペースはアンダースコアに置換、特殊文字は除去）
+
 ### ファイル変更の監視
 
 ```bash
@@ -165,6 +175,8 @@ go build -o instant-backlog ./cmd/instant-backlog
 # または省略形を使用
 ./ib watch [project_path]
 ```
+
+監視モードではデバウンス処理（短時間に発生した複数のファイル変更イベントをまとめて処理）が実装されており、同時に複数のファイルを編集しても過剰な処理が発生しません。デフォルトのデバウンス時間は500ミリ秒です。
 
 ### ファイル監視の停止
 
@@ -177,10 +189,18 @@ go build -o instant-backlog ./cmd/instant-backlog
 ## 8. よくある質問
 
 **Q: ファイルのステータスはどのように変更しますか？**
-A: マークダウンファイルの Front Matter で`status`フィールドを"Open"または"Close"に変更し、`rename`コマンドを実行します。
+A: マークダウンファイルの Front Matter で`status`フィールドを"Open"または"Close"に変更し、`rename`コマンドを実行します。監視モードが有効な場合は自動的にファイル名が更新されます。
 
 **Q: epic と issue の関連付けはどのように行いますか？**
 A: issue の Front Matter で`epic`フィールドに関連する epic の ID を指定します。
 
 **Q: 自動ファイル監視はどのように設定しますか？**
 A: `watch`コマンドを実行してプロジェクトディレクトリを監視します。例: `./ib watch projects`。監視を停止するには Ctrl+C を押すか、別のターミナルで`unwatch`コマンドを実行します。
+
+**Q: Epicはどのようにクローズされますか？**
+A: 以下の2つの方法があります：
+1. 手動で Epic ファイルの Front Matter の `status` フィールドを "Close" に変更
+2. 自動的に - Epic に紐づくすべての Issue が Close 状態になると、Epic も自動的に Close になります
+
+**Q: 重複したIDのファイルが存在する場合はどうなりますか？**
+A: 同じIDを持つ複数のファイルが存在する場合、Close状態のファイルが優先されます。同期コマンド実行時にこのチェックが行われ、警告メッセージが表示されます。
