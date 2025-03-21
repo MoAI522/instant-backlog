@@ -1,0 +1,3 @@
+builds:
+  - main: ./cmd/instant-backlog
+    binary: ib
