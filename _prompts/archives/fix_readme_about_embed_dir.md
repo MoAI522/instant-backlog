@@ -4,8 +4,6 @@ file-system を使用して、ファイルを直接読み書きして作業を�
 まずプロジェクトの全容を把握してください。
 それから、以下のタスクを遂行してください。
 
-- 以下の problem の原因を究明し、まとめてください。
-- コードをどのように修正することで problem を解決できるか、まず artifact に出力してください。
-- artifact に出力した内容を元に、edit_file を使用してコードを修正してください。
-
-problem は以下の通りです。
+template を internal/embedtemplate/template に移動しました。README と ONBOARDING をこれに整合するよう修正します。
+まず現在の修正点をすべて artifact に出力してください。
+その後、edit_file を使用して README と ONBOARDING を修正してください。

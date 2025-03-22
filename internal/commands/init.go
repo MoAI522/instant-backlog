@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/moai/instant-backlog/internal/config"
+	"github.com/moai/instant-backlog/internal/embedtemplate"
 )
 
 // InitCommand - プロジェクトを初期化するコマンド
@@ -43,12 +44,18 @@ func InitCommand(cfg *config.Config, projectPath string) error {
 
 	// テンプレートパスを取得
 	var templateDir string
+	templateFound := false
 
 	// 設定からテンプレートパスを取得
 	if cfg.TemplatePath != "" {
 		templateDir = cfg.TemplatePath
-	} else {
-		// 設定に指定がない場合は既存のロジックを使用
+		if _, err := os.Stat(templateDir); err == nil {
+			templateFound = true
+		}
+	}
+
+	// 設定に指定がなく、テンプレートが見つからない場合は既存のロジックを使用
+	if !templateFound {
 		execPath, err := os.Executable()
 		if err != nil {
 			return fmt.Errorf("実行ファイルのパスを取得できません: %v", err)
@@ -57,24 +64,33 @@ func InitCommand(cfg *config.Config, projectPath string) error {
 		// 実行ファイルと同じディレクトリにあるtemplate/projectsディレクトリを使用
 		templateDir = filepath.Join(filepath.Dir(execPath), "template", "projects")
 
-		// template/projectsディレクトリが存在しない場合、リポジトリのtemplate/projectsディレクトリを使用
-		if _, err := os.Stat(templateDir); os.IsNotExist(err) {
-			// カレントディレクトリからrepositoryのrootディレクトリを探索
-			rootDir := findRepositoryRoot()
-			if rootDir != "" {
-				templateDir = filepath.Join(rootDir, "template", "projects")
+		if _, err := os.Stat(templateDir); err == nil {
+			templateFound = true
+		}
+	}
+
+	// リポジトリのrootディレクトリを探索
+	if !templateFound {
+		rootDir := findRepositoryRoot()
+		if rootDir != "" {
+			templateDir = filepath.Join(rootDir, "template", "projects")
+			if _, err := os.Stat(templateDir); err == nil {
+				templateFound = true
 			}
 		}
 	}
 
-	// テンプレートディレクトリが存在するか確認
-	if _, err := os.Stat(templateDir); os.IsNotExist(err) {
-		return fmt.Errorf("テンプレートディレクトリが見つかりません: %s", templateDir)
-	}
-
-	// テンプレートファイルをコピー
-	if err := copyDir(templateDir, projectsDir); err != nil {
-		return fmt.Errorf("テンプレートファイルのコピーに失敗しました: %v", err)
+	// 外部テンプレートが見つかった場合はそれをコピー
+	if templateFound {
+		// テンプレートファイルをコピー
+		if err := copyDir(templateDir, projectsDir); err != nil {
+			return fmt.Errorf("テンプレートファイルのコピーに失敗しました: %v", err)
+		}
+	} else {
+		// 埋め込みテンプレートを使用
+		if err := embedtemplate.ExtractTemplate(projectsDir); err != nil {
+			return fmt.Errorf("埋め込みテンプレートの展開に失敗しました: %v", err)
+		}
 	}
 
 	fmt.Printf("プロジェクトを初期化しました: %s\n", targetPath)

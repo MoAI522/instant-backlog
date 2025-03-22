@@ -1,6 +1,6 @@
 file-system を使用して、ファイルを直接読み書きして作業を進めてください。
 回答は日本語で行ってください。
-"\\wsl.localhost\Ubuntu-22.04\home\moai\instant-backlog"
+プロジェクトのディレクトリは"\\wsl.localhost\Ubuntu-22.04\home\moai\instant-backlog"です
 まずプロジェクトの全容を把握してください。
 
 - issues 配下のファイルの追加と編集を監視し、更新されたらこのアプリケーションの sync と rename を実行するようにしたい
