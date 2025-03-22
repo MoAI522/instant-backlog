@@ -169,7 +169,7 @@ func TestTemplatePriorityOrder(t *testing.T) {
 	}
 
 	if string(readmeContent) != customReadmeContent {
-		t.Errorf("カスタムテンプレートが使用されていません。期待値: %s, 実際: %s", 
+		t.Errorf("カスタムテンプレートが使用されていません。期待値: %s, 実際: %s",
 			customReadmeContent, string(readmeContent))
 	}
 }
